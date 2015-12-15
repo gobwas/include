@@ -40,6 +40,7 @@ func (e *Kind) String() string {
 var key = flag.String("name", "", "constant name")
 var file = flag.String("file", "", "absolute path to file")
 var output = flag.String("out", "generated_include.go", "output filename")
+var trim = flag.Bool("trim", true, "trim new line characters")
 var kind = &Kind{[]string{kindRaw, kindJson}, kindRaw}
 
 func main() {
@@ -81,7 +82,12 @@ func main() {
 			name = *key
 		}
 
-		fmt.Fprintf(out, "const %s = `%s`\n", name, string(bytes.Trim(b, "\n")))
+		if *trim {
+			fmt.Fprintf(out, "const %s = `%s`\n", name, string(bytes.Trim(b, "\n")))
+		} else {
+			fmt.Fprintf(out, "const %s = `%s`\n", name, string(b))
+		}
+
 	case kindJson:
 		var obj map[string]interface{}
 		err = json.Unmarshal(b, &obj)
