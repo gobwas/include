@@ -1,18 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
-	"os"
-	"encoding/json"
-	"strings"
-	"path/filepath"
 	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 const (
-	kindRaw = "raw"
+	kindRaw  = "raw"
 	kindToml = "toml"
 	kindJson = "json"
 )
@@ -37,13 +37,13 @@ func (e *Kind) String() string {
 	return e.value
 }
 
-var key = flag.String("key", "", "constant name")
-var file = flag.String("path", "", "absolute path to file")
+var key = flag.String("name", "", "constant name")
+var file = flag.String("file", "", "absolute path to file")
 var output = flag.String("out", "generated_include.go", "output filename")
 var kind = &Kind{[]string{kindRaw, kindJson}, kindRaw}
 
 func main() {
-	flag.Var(kind, "type", fmt.Sprintf("how to parse input file (%s)", strings.Join(kind.values, ", ")))
+	flag.Var(kind, "parse", fmt.Sprintf("how to parse input file (%s)", strings.Join(kind.values, ", ")))
 	flag.Parse()
 
 	if *file == "" {
