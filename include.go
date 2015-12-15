@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"bytes"
 )
 
 const (
@@ -57,6 +57,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	b, err := ioutil.ReadAll(fd)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "could not read file: %s", err)
+		os.Exit(1)
+	}
+
 	out, err := os.Create(*output)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not create file: %s", err)
@@ -75,17 +81,9 @@ func main() {
 			name = *key
 		}
 
-		fmt.Fprintf(out, "const %s = `", name)
-		io.Copy(out, fd)
-		out.WriteString("`\n")
+		fmt.Fprintf(out, "const %s = `%s`\n", name, string(bytes.Trim(b, "\n")))
 	case kindJson:
 		var obj map[string]interface{}
-		b, err := ioutil.ReadAll(fd)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "could not read file: %s", err)
-			os.Exit(1)
-		}
-
 		err = json.Unmarshal(b, &obj)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "could not parse json: %s", err)
