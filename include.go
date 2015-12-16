@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"bytes"
+	"go/build"
 )
 
 const (
@@ -58,6 +59,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	pack, err := findPackageName()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "could not determ package of generated code: %s", err)
+		os.Exit(1)
+	}
+
 	fd, err := os.Open(*file)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not open file: %s", err)
@@ -77,7 +84,7 @@ func main() {
 	}
 
 	out.WriteString(doNotEdit)
-	out.WriteString("package main\n\n")
+	fmt.Fprintf(out, "package %s\n\n", pack)
 
 	switch kind.String() {
 	case kindRaw:
@@ -115,7 +122,7 @@ func main() {
 				fmt.Fprintf(out, "const %s = %t", key, v)
 
 			default:
-				fmt.Fprintf(os.Stderr, "nested structs is not supported")
+				fmt.Fprintf(os.Stderr, "nested structs is not supported in json")
 				os.Exit(1)
 			}
 		}
@@ -123,4 +130,13 @@ func main() {
 
 	fd.Close()
 	os.Exit(0)
+}
+
+func findPackageName() (string, error) {
+	p, err := build.Default.Import(".", ".", build.ImportMode(0))
+	if err != nil {
+		return "", err
+	}
+
+	return p.Name, nil
 }
