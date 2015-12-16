@@ -40,7 +40,8 @@ func (e *Kind) String() string {
 
 var key = flag.String("name", "", "constant name")
 var file = flag.String("file", "", "absolute path to file")
-var output = flag.String("out", "generated_include.go", "output filename")
+var output = flag.String("out", "", "output filename")
+var prefix = flag.String("prefix", "include", "output filename prefix")
 var trim = flag.Bool("trim", true, "trim new line characters")
 var kind = &Kind{[]string{kindRaw, kindJson}, kindRaw}
 
@@ -77,7 +78,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	out, err := os.Create(*output)
+	filename := filepath.Base(*file)
+	filename = strings.TrimSuffix(filename, filepath.Ext(filename))
+
+	var outname string
+	if *output != "" {
+		outname = *output
+	} else {
+		outname = fmt.Sprintf("%s_%s.go", *prefix, filename)
+	}
+
+	out, err := os.Create(outname)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "could not create file: %s", err)
 		os.Exit(1)
@@ -90,8 +101,7 @@ func main() {
 	case kindRaw:
 		var name string
 		if *key == "" {
-			name = filepath.Base(*file)
-			name = strings.TrimSuffix(name, filepath.Ext(name))
+			name = filename
 		} else {
 			name = *key
 		}
